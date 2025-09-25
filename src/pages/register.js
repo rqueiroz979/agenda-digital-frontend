@@ -1,8 +1,8 @@
 import React, { useState } from "react";
 import { apiRequest } from "../services/api";
 
-function Login() {
-  const [form, setForm] = useState({ email: "", senha: "" });
+function Register() {
+  const [form, setForm] = useState({ nome: "", email: "", senha: "" });
   const [message, setMessage] = useState("");
 
   const handleChange = (e) => {
@@ -12,9 +12,8 @@ function Login() {
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
-      const data = await apiRequest("/auth/login", "POST", form);
-      localStorage.setItem("token", data.access_token);
-      setMessage("Login realizado com sucesso!");
+      await apiRequest("/usuarios/", "POST", form);
+      setMessage("Usuário cadastrado com sucesso!");
     } catch (error) {
       setMessage(error.message);
     }
@@ -22,15 +21,16 @@ function Login() {
 
   return (
     <div>
-      <h2>Login</h2>
+      <h2>Cadastro</h2>
       <form onSubmit={handleSubmit}>
+        <input name="nome" placeholder="Nome" onChange={handleChange} />
         <input name="email" placeholder="Email" onChange={handleChange} />
         <input name="senha" type="password" placeholder="Senha" onChange={handleChange} />
-        <button type="submit">Entrar</button>
+        <button type="submit">Cadastrar</button>
       </form>
       <p>{message}</p>
     </div>
   );
 }
 
-export default Login;
+export default Register;

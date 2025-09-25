@@ -1,20 +1,18 @@
-// src/services/api.js
-import axios from "axios";
+const API_URL = process.env.REACT_APP_API_URL;
 
-// URL da sua API hospedada no Render
-const API_URL = "https://agenda-digital-api.onrender.com/api";
+export async function apiRequest(endpoint, method = "GET", body = null, token = null) {
+  const headers = { "Content-Type": "application/json" };
+  if (token) headers["Authorization"] = `Bearer ${token}`;
 
-const api = axios.create({
-  baseURL: API_URL,
-});
+  const response = await fetch(`${API_URL}${endpoint}`, {
+    method,
+    headers,
+    body: body ? JSON.stringify(body) : null,
+  });
 
-// Adiciona automaticamente o token em cada requisição
-api.interceptors.request.use((config) => {
-  const token = localStorage.getItem("token");
-  if (token) {
-    config.headers.Authorization = `Bearer ${token}`;
+  const data = await response.json();
+  if (!response.ok) {
+    throw new Error(data.error || "Erro na requisição");
   }
-  return config;
-});
-
-export default api;
+  return data;
+}
