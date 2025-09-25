@@ -1,189 +1,139 @@
-import React, { useState } from 'react';
-import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Users, Plus, Menu, Search, Home, Settings } from 'lucide-react';
-import ClientList from './components/ClientList';
-import ClientFormExpanded from './components/ClientFormExpanded';
-import ClientView from './components/ClientView';
-import './App.css';
+// src/App.jsx
+import { useState, useEffect } from "react";
+import api from "./services/api";
+import Login from "./pages/Login";
+import ClientList from "./components/ClientList";
+import ClientFormExpanded from "./components/ClientFormExpanded";
+import ClientView from "./components/ClientView";
 
-function App() {
-  const [currentView, setCurrentView] = useState('list');
-  const [selectedClient, setSelectedClient] = useState(null);
-  const [showMobileMenu, setShowMobileMenu] = useState(false);
+export default function App() {
+  const [user, setUser] = useState(null);
+  const [clientes, setClientes] = useState([]);
+  const [selectedCliente, setSelectedCliente] = useState(null);
+  const [editingCliente, setEditingCliente] = useState(null);
+  const [showForm, setShowForm] = useState(false);
 
-  const handleAddClient = () => {
-    setSelectedClient(null);
-    setCurrentView('form');
-  };
+  // Verifica se existe usuário logado no localStorage
+  useEffect(() => {
+    const savedUser = localStorage.getItem("user");
+    if (savedUser) {
+      setUser(JSON.parse(savedUser));
+      carregarClientes();
+    }
+  }, []);
 
-  const handleEditClient = (client) => {
-    setSelectedClient(client);
-    setCurrentView('form');
-  };
-
-  const handleViewClient = (client) => {
-    setSelectedClient(client);
-    setCurrentView('view');
-  };
-
-  const handleSaveClient = (savedClient) => {
-    setCurrentView('list');
-    setSelectedClient(null);
-  };
-
-  const handleCancel = () => {
-    setCurrentView('list');
-    setSelectedClient(null);
-  };
-
-  const handleRemoteAccess = (type, client) => {
-    const id = type === 'teamviewer' ? client.teamviewer_id : client.anydesk_id;
-    
-    if (type === 'teamviewer') {
-      // Para TeamViewer, tentamos abrir o protocolo teamviewer:// se disponível
-      window.open(`teamviewer10://control?device=${id}`, '_blank');
-      // Fallback para a versão web
-      setTimeout(() => {
-        window.open(`https://start.teamviewer.com/`, '_blank');
-      }, 1000);
-    } else if (type === 'anydesk') {
-      // Para AnyDesk, tentamos abrir o protocolo anydesk:// se disponível
-      window.open(`anydesk:${id}`, '_blank');
-      // Fallback para mostrar o ID para o usuário
-      setTimeout(() => {
-        alert(`ID AnyDesk: ${id}\nAbra o AnyDesk e conecte-se usando este ID.`);
-      }, 1000);
+  // Função para buscar clientes da API
+  const carregarClientes = async () => {
+    try {
+      const res = await api.get("/clientes/");
+      setClientes(res.data);
+    } catch (error) {
+      console.error("Erro ao carregar clientes:", error);
     }
   };
 
+  // Função para login
+  const handleLogin = (data) => {
+    setUser(data.user);
+    localStorage.setItem("user", JSON.stringify(data.user));
+    localStorage.setItem("token", data.token);
+    carregarClientes();
+  };
+
+  // Função para logout
+  const handleLogout = () => {
+    setUser(null);
+    localStorage.removeItem("user");
+    localStorage.removeItem("token");
+    setClientes([]);
+  };
+
+  // Função para salvar cliente (novo ou editado)
+  const handleSaveCliente = async (formData) => {
+    try {
+      if (editingCliente) {
+        await api.put(`/clientes/${editingCliente.id}`, formData);
+      } else {
+        await api.post("/clientes/", formData);
+      }
+      setShowForm(false);
+      setEditingCliente(null);
+      carregarClientes();
+    } catch (error) {
+      console.error("Erro ao salvar cliente:", error);
+    }
+  };
+
+  // Função para excluir cliente
+  const handleDeleteCliente = async (id) => {
+    if (!window.confirm("Tem certeza que deseja excluir este cliente?")) return;
+    try {
+      await api.delete(`/clientes/${id}`);
+      carregarClientes();
+      if (selectedCliente && selectedCliente.id === id) {
+        setSelectedCliente(null);
+      }
+    } catch (error) {
+      console.error("Erro ao excluir cliente:", error);
+    }
+  };
+
+  if (!user) {
+    return <Login onLogin={handleLogin} />;
+  }
+
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100">
-      {/* Mobile Header */}
-      <header className="bg-white shadow-lg border-b border-gray-200 sticky top-0 z-50">
-        <div className="px-4 py-3">
-          <div className="flex items-center justify-between">
-            {/* Logo e Título */}
-            <div className="flex items-center gap-3">
-              <div className="bg-gradient-to-r from-blue-600 to-indigo-600 p-2.5 rounded-xl shadow-lg">
-                <Users className="h-6 w-6 text-white" />
-              </div>
-              <div>
-                <h1 className="text-lg font-bold text-gray-900">Agenda Digital</h1>
-                <p className="text-xs text-gray-500">Gestão de Clientes</p>
-              </div>
-            </div>
-            
-            {/* Menu Mobile */}
-            <Button
-              onClick={() => setShowMobileMenu(!showMobileMenu)}
-              variant="ghost"
-              size="icon"
-              className="md:hidden"
-            >
-              <Menu className="h-6 w-6" />
-            </Button>
-          </div>
-          
-          {/* Menu Mobile Expandido */}
-          {showMobileMenu && (
-            <div className="mt-4 pb-2 border-t border-gray-100 pt-4">
-              <div className="grid grid-cols-3 gap-2">
-                <Button
-                  onClick={() => {
-                    setCurrentView('list');
-                    setShowMobileMenu(false);
-                  }}
-                  variant={currentView === 'list' ? 'default' : 'ghost'}
-                  size="sm"
-                  className="flex flex-col gap-1 h-auto py-3"
-                >
-                  <Users className="h-4 w-4" />
-                  <span className="text-xs">Clientes</span>
-                </Button>
-                <Button 
-                  variant="ghost" 
-                  size="sm"
-                  className="flex flex-col gap-1 h-auto py-3"
-                >
-                  <Home className="h-4 w-4" />
-                  <span className="text-xs">Início</span>
-                </Button>
-                <Button 
-                  variant="ghost" 
-                  size="sm"
-                  className="flex flex-col gap-1 h-auto py-3"
-                >
-                  <Settings className="h-4 w-4" />
-                  <span className="text-xs">Config</span>
-                </Button>
-              </div>
-            </div>
-          )}
-        </div>
-      </header>
+    <div className="p-6 bg-gray-100 min-h-screen">
+      <div className="flex justify-between items-center mb-6">
+        <h1 className="text-3xl font-bold">Agenda Digital</h1>
+        <button
+          onClick={handleLogout}
+          className="bg-red-600 text-white px-4 py-2 rounded hover:bg-red-700"
+        >
+          Sair
+        </button>
+      </div>
 
-      {/* Main Content */}
-      <main className="px-4 py-6 pb-20">
-        {currentView === 'list' && (
+      <div className="grid grid-cols-3 gap-4">
+        <div className="col-span-1">
+          <button
+            onClick={() => {
+              setEditingCliente(null);
+              setShowForm(true);
+            }}
+            className="bg-green-600 text-white px-4 py-2 mb-4 rounded hover:bg-green-700 w-full"
+          >
+            Novo Cliente
+          </button>
+
           <ClientList
-            onAddClient={handleAddClient}
-            onEditClient={handleEditClient}
-            onViewClient={handleViewClient}
-            onRemoteAccess={handleRemoteAccess}
+            clientes={clientes}
+            onSelect={setSelectedCliente}
+            onEdit={(c) => {
+              setEditingCliente(c);
+              setShowForm(true);
+            }}
+            onDelete={handleDeleteCliente}
           />
-        )}
-        
-        {currentView === 'form' && (
-          <ClientFormExpanded
-            client={selectedClient}
-            onSave={handleSaveClient}
-            onCancel={handleCancel}
-          />
-        )}
-        
-        {currentView === 'view' && selectedClient && (
-          <ClientView
-            client={selectedClient}
-            onEdit={handleEditClient}
-            onBack={handleCancel}
-            onRemoteAccess={handleRemoteAccess}
-          />
-        )}
-      </main>
+        </div>
 
-      {/* Bottom Navigation - Mobile */}
-      <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 shadow-lg md:hidden">
-        <div className="grid grid-cols-3 gap-1 p-2">
-          <Button
-            onClick={() => setCurrentView('list')}
-            variant={currentView === 'list' ? 'default' : 'ghost'}
-            size="sm"
-            className="flex flex-col gap-1 h-auto py-3 rounded-xl"
-          >
-            <Users className="h-5 w-5" />
-            <span className="text-xs">Clientes</span>
-          </Button>
-          <Button
-            onClick={handleAddClient}
-            className="flex flex-col gap-1 h-auto py-3 rounded-xl bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700"
-          >
-            <Plus className="h-5 w-5" />
-            <span className="text-xs">Novo</span>
-          </Button>
-          <Button 
-            variant="ghost" 
-            size="sm"
-            className="flex flex-col gap-1 h-auto py-3 rounded-xl"
-          >
-            <Settings className="h-5 w-5" />
-            <span className="text-xs">Config</span>
-          </Button>
+        <div className="col-span-2">
+          {showForm ? (
+            <ClientFormExpanded
+              initialData={editingCliente}
+              onSubmit={handleSaveCliente}
+              onCancel={() => {
+                setShowForm(false);
+                setEditingCliente(null);
+              }}
+            />
+          ) : selectedCliente ? (
+            <ClientView cliente={selectedCliente} />
+          ) : (
+            <p className="text-gray-500">Selecione um cliente ou cadastre um novo.</p>
+          )}
         </div>
       </div>
     </div>
   );
 }
-
-export default App;
-
