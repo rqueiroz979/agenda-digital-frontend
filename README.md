@@ -9,18 +9,35 @@ Frontend da aplicação Agenda Digital para cadastro e consulta de clientes, des
 - TailwindCSS
 - PWA (Progressive Web App)
 
-## Instalação
+## Configuração do Ambiente
+
+1.  **Clone o repositório:**
+    ```bash
+    git clone <URL_DO_REPOSITORIO>
+    cd agenda-digital-frontend
+    ```
+
+2.  **Instale as dependências:**
+    ```bash
+    npm install
+    ```
+
+3.  **Configure as variáveis de ambiente:**
+    Crie um arquivo `.env` na raiz do projeto com a seguinte variável:
+    ```
+    VITE_API_URL=http://localhost:5000/api
+    ```
+    - `VITE_API_URL`: URL base da API do backend. Para desenvolvimento local, use `http://localhost:5000/api`.
+
+## Execução da Aplicação
+
+Para iniciar o servidor de desenvolvimento do frontend:
 
 ```bash
-# Instalar dependências
-npm install
-
-# Iniciar servidor de desenvolvimento
 npm run dev
-
-# Construir para produção
-npm run build
 ```
+
+O frontend estará disponível em `http://localhost:5173`.
 
 ## Funcionalidades
 

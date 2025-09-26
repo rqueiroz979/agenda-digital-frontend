@@ -1,7 +1,7 @@
 import React from "react";
 import { BrowserRouter as Router, Routes, Route, Navigate } from "react-router-dom";
 import Login from "./pages/login.jsx";
-import ClientForm from "./pages/clientForm.jsx";
+import ClientForm from "./pages/clientform.jsx";
 import Home from "./pages/home.jsx";
 
 // simples proteção de rota
@@ -31,9 +31,18 @@ export default function App() {
             </PrivateRoute>
           }
         />
+        <Route
+          path="/clientes/editar/:id"
+          element={
+            <PrivateRoute>
+              <ClientForm />
+            </PrivateRoute>
+          }
+        />
         {/* fallback */}
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
     </Router>
   );
 }
+

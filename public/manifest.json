@@ -1,24 +1,28 @@
 {
-
-
   "name": "Agenda Digital",
-  "short_name": "Agenda",
-  "start_url": ".",
+  "short_name": "Agenda Digital",
+  "description": "Sistema de gerenciamento de clientes para empresas de TI",
+  "start_url": "/",
   "display": "standalone",
-  "background_color": "#ffffff",
+  "background_color": "#1e293b",
   "theme_color": "#3b82f6",
-  "description": "Gerenciamento de clientes para sua empresa",
+  "orientation": "portrait-primary",
   "icons": [
     {
       "src": "/icons/icon-192x192.png",
       "sizes": "192x192",
-      "type": "image/png"
+      "type": "image/png",
+      "purpose": "maskable any"
     },
     {
       "src": "/icons/icon-512x512.png",
       "sizes": "512x512",
-      "type": "image/png"
+      "type": "image/png",
+      "purpose": "maskable any"
     }
-  ]
+  ],
+  "categories": ["business", "productivity"],
+  "lang": "pt-BR",
+  "dir": "ltr"
 }
 
